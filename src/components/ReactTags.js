@@ -41,6 +41,7 @@ class ReactTags extends Component {
     inline: PropTypes.bool, // TODO: Remove in v7.x.x
     inputFieldPosition: PropTypes.oneOf([INPUT_FIELD_POSITIONS.INLINE, INPUT_FIELD_POSITIONS.TOP, INPUT_FIELD_POSITIONS.BOTTOM]),
     handleDelete: PropTypes.func,
+    validateAddition: PropTypes.func,
     handleAddition: PropTypes.func,
     handleDrag: PropTypes.func,
     handleFilterSuggestions: PropTypes.func,
@@ -338,17 +339,24 @@ class ReactTags extends Component {
       }
     }
 
-    // call method to add
-    this.props.handleAddition(tag);
+    let tagValid = true
+    if (this.props.validateAddition) {
+      tagValid = this.props.validateAddition(tag);
+    }
 
-    // reset the state
-    this.setState({
-      query: '',
-      selectionMode: false,
-      selectedIndex: -1,
-    });
+    if (tagValid) {
+      // call method to add
+      this.props.handleAddition(tag);
 
-    this.resetAndFocusInput();
+      // reset the state
+      this.setState({
+        query: '',
+        selectionMode: false,
+        selectedIndex: -1,
+      });
+
+      this.resetAndFocusInput();
+    }
   };
 
   handleSuggestionClick(i) {
