@@ -37,10 +37,12 @@ class ReactTags extends Component {
       })
     ),
     delimiters: PropTypes.arrayOf(PropTypes.number),
+    autocompleteDelimiters: PropTypes.arrayOf(PropTypes.number),
     autofocus: PropTypes.bool,
     inline: PropTypes.bool, // TODO: Remove in v7.x.x
     inputFieldPosition: PropTypes.oneOf([INPUT_FIELD_POSITIONS.INLINE, INPUT_FIELD_POSITIONS.TOP, INPUT_FIELD_POSITIONS.BOTTOM]),
     handleDelete: PropTypes.func,
+    validateAddition: PropTypes.func,
     handleAddition: PropTypes.func,
     handleDrag: PropTypes.func,
     handleFilterSuggestions: PropTypes.func,
@@ -77,6 +79,7 @@ class ReactTags extends Component {
     labelField: DEFAULT_LABEL_FIELD,
     suggestions: [],
     delimiters: [KEYS.ENTER, KEYS.TAB],
+    autocompleteDelimiters: [KEYS.TAB],
     autofocus: true,
     inline: true, // TODO: Remove in v7.x.x
     inputFieldPosition: INPUT_FIELD_POSITIONS.INLINE,
@@ -252,7 +255,7 @@ class ReactTags extends Component {
           : { id: query, [this.props.labelField]: query };
 
       if (selectedQuery !== '') {
-        this.addTag(selectedQuery);
+        this.addTag(selectedQuery, this.props.autocompleteDelimiters.indexOf(e.keyCode) !== -1);
       }
     }
 
@@ -309,11 +312,11 @@ class ReactTags extends Component {
 
     // Only add unique tags
     uniq(tags).forEach((tag) =>
-      this.addTag({ id: tag, [this.props.labelField]: tag })
+      this.addTag({ id: tag, [this.props.labelField]: tag }, false)
     );
   }
 
-  addTag = (tag) => {
+  addTag = (tag, triggerAutocomplete) => {
     const { tags, labelField, allowUnique } = this.props;
     if (!tag.id || !tag[labelField]) {
       return;
@@ -324,7 +327,7 @@ class ReactTags extends Component {
     if (allowUnique && existingKeys.indexOf(tag.id.toLowerCase()) >= 0) {
       return;
     }
-    if (this.props.autocomplete) {
+    if (this.props.autocomplete && triggerAutocomplete) {
       const possibleMatches = this.filteredSuggestions(
         tag[labelField],
         this.props.suggestions
@@ -338,21 +341,28 @@ class ReactTags extends Component {
       }
     }
 
-    // call method to add
-    this.props.handleAddition(tag);
+    let tagValid = true
+    if (this.props.validateAddition) {
+      tagValid = this.props.validateAddition(tag);
+    }
 
-    // reset the state
-    this.setState({
-      query: '',
-      selectionMode: false,
-      selectedIndex: -1,
-    });
+    if (tagValid) {
+      // call method to add
+      this.props.handleAddition(tag);
 
-    this.resetAndFocusInput();
+      // reset the state
+      this.setState({
+        query: '',
+        selectionMode: false,
+        selectedIndex: -1,
+      });
+
+      this.resetAndFocusInput();
+    }
   };
 
   handleSuggestionClick(i) {
-    this.addTag(this.state.suggestions[i]);
+    this.addTag(this.state.suggestions[i], false);
   }
 
   handleSuggestionHover(i) {
