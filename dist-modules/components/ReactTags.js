@@ -238,7 +238,7 @@ var ReactTags = function (_Component) {
         var selectedQuery = selectionMode && selectedIndex !== -1 ? suggestions[selectedIndex] : _defineProperty({ id: query }, this.props.labelField, query);
 
         if (selectedQuery !== '') {
-          this.addTag(selectedQuery);
+          this.addTag(selectedQuery, this.props.autocompleteDelimiters.indexOf(e.keyCode) !== -1);
         }
       }
 
@@ -292,13 +292,13 @@ var ReactTags = function (_Component) {
 
       // Only add unique tags
       (0, _uniq2.default)(tags).forEach(function (tag) {
-        return _this3.addTag(_defineProperty({ id: tag }, _this3.props.labelField, tag));
+        return _this3.addTag(_defineProperty({ id: tag }, _this3.props.labelField, tag), false);
       });
     }
   }, {
     key: 'handleSuggestionClick',
     value: function handleSuggestionClick(i) {
-      this.addTag(this.state.suggestions[i]);
+      this.addTag(this.state.suggestions[i], false);
     }
   }, {
     key: 'handleSuggestionHover',
@@ -411,6 +411,7 @@ ReactTags.propTypes = {
     id: _propTypes2.default.string.isRequired
   })),
   delimiters: _propTypes2.default.arrayOf(_propTypes2.default.number),
+  autocompleteDelimiters: _propTypes2.default.arrayOf(_propTypes2.default.number),
   autofocus: _propTypes2.default.bool,
   inline: _propTypes2.default.bool, // TODO: Remove in v7.x.x
   inputFieldPosition: _propTypes2.default.oneOf([_constants.INPUT_FIELD_POSITIONS.INLINE, _constants.INPUT_FIELD_POSITIONS.TOP, _constants.INPUT_FIELD_POSITIONS.BOTTOM]),
@@ -449,6 +450,7 @@ ReactTags.defaultProps = {
   labelField: _constants.DEFAULT_LABEL_FIELD,
   suggestions: [],
   delimiters: [_constants.KEYS.ENTER, _constants.KEYS.TAB],
+  autocompleteDelimiters: [_constants.KEYS.TAB],
   autofocus: true,
   inline: true, // TODO: Remove in v7.x.x
   inputFieldPosition: _constants.INPUT_FIELD_POSITIONS.INLINE,
@@ -471,7 +473,7 @@ var _initialiseProps = function _initialiseProps() {
     return item[_this5.props.labelField].toLowerCase().indexOf(query.toLowerCase());
   };
 
-  this.addTag = function (tag) {
+  this.addTag = function (tag, triggerAutocomplete) {
     var _props3 = _this5.props,
         tags = _props3.tags,
         labelField = _props3.labelField,
@@ -488,7 +490,7 @@ var _initialiseProps = function _initialiseProps() {
     if (allowUnique && existingKeys.indexOf(tag.id.toLowerCase()) >= 0) {
       return;
     }
-    if (_this5.props.autocomplete) {
+    if (_this5.props.autocomplete && triggerAutocomplete) {
       var possibleMatches = _this5.filteredSuggestions(tag[labelField], _this5.props.suggestions);
 
       if (_this5.props.autocomplete === 1 && possibleMatches.length === 1 || _this5.props.autocomplete === true && possibleMatches.length) {
